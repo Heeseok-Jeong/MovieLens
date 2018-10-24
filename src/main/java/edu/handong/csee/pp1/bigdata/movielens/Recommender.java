@@ -158,8 +158,37 @@ public class Recommender
 
 	private int predictPair(HashSet<Integer> anItemset, Integer j) {
 		/* TODO: implement this method */
-		
+		if (anItemset.size() < 1)
+			return 0 ;
 		// Compute support, confidence, or lift. Based on their threshold, decide how to predict. Return 1 when metrics are satisfied by threshold, otherwise 0.
+		// In the current implementation, we considered only confidence.
+		int evidence = 0 ;
+		for (Set<Integer> p : Sets.combinations(anItemset, 2)) {
+				
+			// the number baskets for I
+			Integer numBasketsForI = freqItemsetsWithSize2.get(new FrequentItemsetSize2(p)) ;
+					
+			if (numBasketsForI == null)
+				continue ;
+					
+			// the number of baskets for I U {j}
+			TreeSet<Integer> assocRule = new TreeSet<Integer>(p) ;
+			assocRule.add(j) ;
+			FrequentItemsetSize3 item = new FrequentItemsetSize3(assocRule) ;	
+			Integer numBasketsForIUnionj = freqItemsetsWithSize3.get(item) ; // All itemsets in freqItemsetsWithSize3 satisfy minimum support when the are computed.
+			if (numBasketsForIUnionj == null)
+				continue ;
+					
+			// compute confidence: The confidence of the rule I -> j is the ratio of the number of baskets for I U {j} and the number of baskets for I.
+			double confidence = (double) numBasketsForIUnionj / numBasketsForI;
+				
+			if (confidence >= confidence_threshold_rulesize_2) 
+				evidence++ ;
+		}
+
+		if (evidence >= min_evidence_3) 
+			return 1 ;
+
 		return 0 ;
 	}
 
