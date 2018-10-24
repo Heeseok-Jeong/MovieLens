@@ -10,16 +10,16 @@ public class Recommender
 	TreeMap<FrequentItemsetSize2, Integer> countForAllItemsetsWithSize2 = new TreeMap<FrequentItemsetSize2, Integer>() ; // first item, second count
 	
 	// Frequent itemsets with size 1. Key is movie id and value is the number baskets (frequency) for the movie
-	// all itemsets in this map stisfies the minimum support.
+	// all itemsets in this map satisfies the minimum support.
 	TreeMap<Integer, Integer> freqItemsetsWithSize1 = new TreeMap<Integer, Integer>() ; 
 	
 	// Frequent itemsets with size 2. Key is two movie ids (set) and value is the number baskets (frequency) for the movie
-	// all itemsets in this map stisfies the minimum support.
+	// all itemsets in this map satisfies the minimum support.
 	TreeMap<FrequentItemsetSize2, Integer> 
 	freqItemsetsWithSize2 = new TreeMap<FrequentItemsetSize2, Integer>() ; 
 	
 	// Frequent itemsets with size 3. Key is three movie ids (set) and value is the number baskets (frequency) for the movie
-	// all itemsets in this map stisfies the minimum support.
+	// all itemsets in this map satisfies the minimum support.
 	TreeMap<FrequentItemsetSize3, Integer> 
 	freqItemsetsWithSize3 = new TreeMap<FrequentItemsetSize3, Integer>() ; 
 
@@ -63,8 +63,10 @@ public class Recommender
 		return predictTriple(anItemset, q) ;
 	}
 
+	// aBasket은 유저 아이디  
 	private void computeFreqItemsetsWithSize1(HashSet<Integer> aBasket) {
 		
+		// 유저가 적은 리뷰 갯수는 카운
 		for (Integer item : aBasket) {
 			Integer count = countForAllItemsetsWithSize1.get(item) ;
 			if (count == null)
@@ -76,6 +78,7 @@ public class Recommender
 		
 		for(Integer item:countForAllItemsetsWithSize1.keySet()) {
 			
+			// freq에 countfor에서 최소수 넘긴 것들만 넣음 
 			if(countForAllItemsetsWithSize1.get(item)>=minSupport)
 				freqItemsetsWithSize1.put(item, countForAllItemsetsWithSize1.get(item));
 		}
@@ -83,13 +86,16 @@ public class Recommender
 
 	private void computeFreqItemsetsWithSize2(HashSet<Integer> aBasket) {
 		
+		// 1의 아이템 셋은 이 변수에 다 있음 
 		HashSet<Integer> allItemsetsWithSize1ThatSatisfyMinSupportInTheBasket = new HashSet<Integer>() ;
 		for (Integer item : aBasket) {
 			// We only need to consider items in the frequent itemsets with Size 1. => Using monotonicity to improve this algorithm
+			// fre에 있는 것들에 해서 유저아이디를 all에 넣음 
 			if (freqItemsetsWithSize1.containsKey(item))
 				allItemsetsWithSize1ThatSatisfyMinSupportInTheBasket.add(item) ;
 		}
 		
+		// 최소 갯수 이상 영화를 체크한 사람 중, 1개 이상의 추천 받은 영
 		aBasket = allItemsetsWithSize1ThatSatisfyMinSupportInTheBasket;
 		
 		// it is obvious that aBasket must have at least two items for computing its frequency.
@@ -244,16 +250,53 @@ class FrequentItemsetSize2 implements Comparable
 class FrequentItemsetSize3 implements Comparable 
 {
 	int [] items ;
+	int first;
+	int second;
+	int third;
+	
+	public FrequentItemsetSize3(int first, int second, int third) {
+		if (first <= second) {
+			this.first = first ;
+			this.second = second ;
+		}
+		else if(second <= third) {
+			this.second = third ;
+			this.third = second ;
+		}
+		else if (first <= second) {
+			this.first = first ;
+			this.second = second ;
+		}
+	}
 
 	FrequentItemsetSize3(Set<Integer> s) {
 		/* TODO: implement this method */
-		
+		Integer [] elem = s.toArray(new Integer[3]) ;
+		// order item ids!
+		if (elem[0] < elem[1]) {
+			this.first = elem[0] ;
+			this.second = elem[1] ;
+		}
+		else if(elem[1] < elem[2]) {
+			this.second = elem[1] ;
+			this.third = elem[2] ;
+		}
+		else if(elem[0] < elem[1]) {
+			this.first = elem[0];
+			this.second = elem[1];
+		}
 		// values in s must be sorted and save into items array
 	}
 
 	@Override
-	public int compareTo(Object obj) {  // this method is used for sorting when using TreeMap
-		/* TODO: implement this method */
-		return 0 ;
+	public int compareTo(Object obj) { // this method is used for sorting when using TreeMap
+		FrequentItemsetSize3 p = (FrequentItemsetSize3) obj ;
+
+		if (this.first < p.first) 
+			return -1 ;
+		if (this.first > p.first)
+			return 1 ;
+
+		return (this.second - p.second) ;
 	}
 }
